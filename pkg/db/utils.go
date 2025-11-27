@@ -67,5 +67,5 @@ func ExecWithTimeout(ctx context.Context, pool *pgxpool.Pool, queryTimeout time.
 }
 
 func ExecuteDBExec(ctx context.Context, conn *SqlConnection, query string, params ...any) (int64, error) {
-	return ExecWithTimeout(ctx, conn.PgSql, Inst.Timeout, query, params...)
+	return ExecWithTimeout(ctx, conn.PgSql, conn.Timeout, query, params...)
 }

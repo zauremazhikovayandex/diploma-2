@@ -17,7 +17,7 @@ type SqlConnection struct {
 }
 
 var (
-	Inst *SqlConnection
+	inst *SqlConnection
 	once sync.Once
 )
 
@@ -49,16 +49,16 @@ func SqlInstance(cfg *config.DBConfig) (*SqlConnection, error) {
 			initErr = fmt.Errorf("failed ping: %w", err)
 			return
 		}
-		Inst = &SqlConnection{
+		inst = &SqlConnection{
 			PgSql:   dbPool,
 			Timeout: timeout,
 		}
 	})
 
-	if initErr != nil || Inst == nil {
+	if initErr != nil || inst == nil {
 		return nil, initErr
 	}
-	return Inst, nil
+	return inst, nil
 }
 
 func (s *SqlConnection) CloseSqlInstance() {

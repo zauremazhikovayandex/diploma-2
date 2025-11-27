@@ -73,10 +73,9 @@ func main() {
 	// Init Postgres
 	instance, err := db.SqlInstance(cfg.DBConfig)
 	if err != nil {
-		fmt.Println("DB prepare issues", err)
-	} else {
-		db.PrepareDB(instance)
+		log.Fatal("DB prepare issues", err)
 	}
+	db.PrepareDB(instance)
 
 	api := handlers.New(handlers.Deps{
 		Cfg: cfg,
@@ -107,6 +106,7 @@ func main() {
 		instance.CloseSqlInstance()
 	})
 
+	logger.Log.Info(&message.LogMessage{Message: fmt.Sprintf("Starting server on port %s", cfg.ServerAddr)})
 	if err := Srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}

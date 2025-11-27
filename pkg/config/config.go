@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	_ "github.com/lib/pq"
+	"log"
 	"os"
 	"time"
 )
@@ -29,6 +30,12 @@ type DBConfig struct {
 }
 
 func InitConfig() *Config {
+	// Если нет конфига - не запускаем приложение
+	secret := os.Getenv("JWT_SECRET_KEY")
+	if secret == "" {
+		log.Fatal("ENV JWT_SECRET_KEY is required")
+	}
+
 	// Парсим флаги во временные переменные
 	baseURLFlag := flag.String("a", "", "base URL for short links")
 	dbConfigFlag := flag.String("d", "", "base URL for short links")
@@ -70,7 +77,7 @@ func InitConfig() *Config {
 		Env:                "prod",
 		BaseURL:            baseURL,
 		JWTCookieName:      "auth_token",
-		JWTSecretKey:       "supersecretkey",
+		JWTSecretKey:       secret,
 		JWTTokenExp:        time.Hour * 720,
 		DBConfig:           &dbConfig,
 		AccrualBaseURL:     "http://accrual:8080",
