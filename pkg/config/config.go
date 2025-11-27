@@ -6,6 +6,7 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -21,6 +22,7 @@ type Config struct {
 	AccrualBaseURL     string
 	AccrualHTTPTimeout time.Duration
 	AccrualRPM         int
+	DataEncKey         string // ключ для шифрования пользовательских данных
 }
 
 type DBConfig struct {
@@ -29,59 +31,80 @@ type DBConfig struct {
 	DBTimeout   int    `json:"db-timeout"`
 }
 
+var (
+	baseURLFlag  = flag.String("a", "", "base URL for short links")
+	dbConfigFlag = flag.String("d", "", "database URI")
+
+	cfgOnce   sync.Once
+	globalCfg *Config
+)
+
+// InitConfig собирается один раз
 func InitConfig() *Config {
-	// Если нет конфига - не запускаем приложение
-	secret := os.Getenv("JWT_SECRET_KEY")
-	if secret == "" {
-		log.Fatal("ENV JWT_SECRET_KEY is required")
-	}
+	cfgOnce.Do(func() {
+		secret := os.Getenv("JWT_SECRET_KEY")
+		if secret == "" {
+			log.Fatal("ENV JWT_SECRET_KEY is required")
+		}
+		dataKey := os.Getenv("DATA_ENC_KEY")
+		if dataKey == "" {
+			dataKey = "dev-insecure-data-key"
+		}
 
-	// Парсим флаги во временные переменные
-	baseURLFlag := flag.String("a", "", "base URL for short links")
-	dbConfigFlag := flag.String("d", "", "base URL for short links")
-	flag.Parse()
+		// дефолты
+		baseURL := "http://localhost:8080"
+		dbUri := fmt.Sprintf(
+			"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+			"localhost", 5432, "postgres", "postgres", "aviato",
+		)
 
-	// Устанавливаем значения по умолчанию
-	baseURL := "http://localhost:8080"
-	dbUri := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		"localhost", 5432, "postgres", "postgres", "aviato",
-	)
+		// флаги (значения уже будут установлены, если где-то был flag.Parse(), например в main)
+		if *baseURLFlag != "" {
+			baseURL = *baseURLFlag
+		}
+		if *dbConfigFlag != "" {
+			dbUri = *dbConfigFlag
+		}
 
-	if *baseURLFlag != "" {
-		baseURL = *baseURLFlag
-	}
+		// окружение
+		if env := os.Getenv("RUN_ADDRESS"); env != "" {
+			baseURL = env
+		}
+		if env := os.Getenv("DATABASE_URI"); env != "" {
+			dbUri = env
+		}
 
-	if *dbConfigFlag != "" {
-		dbUri = *dbConfigFlag
-	}
+		dbConfig := DBConfig{
+			DatabaseUri: dbUri,
+			PoolSize:    50,
+			DBTimeout:   5000,
+		}
 
-	// Окружением (имеет самый высокий приоритет)
-	if env := os.Getenv("RUN_ADDRESS"); env != "" {
-		baseURL = env
-	}
+		cfg := &Config{
+			ServerAddr:         ":8080",
+			ServiceName:        "Diploma-1",
+			Env:                "prod",
+			BaseURL:            baseURL,
+			JWTCookieName:      "auth_token",
+			JWTSecretKey:       "supersecretkey",
+			JWTTokenExp:        time.Hour * 720,
+			DBConfig:           &dbConfig,
+			AccrualBaseURL:     "http://accrual:8080",
+			AccrualHTTPTimeout: 30 * time.Second,
+			AccrualRPM:         60,
+			DataEncKey:         dataKey,
+		}
 
-	if env := os.Getenv("DATABASE_URI"); env != "" {
-		dbUri = env
-	}
+		// при желании можно переопределять секрет и окружение из env:
+		if secret := os.Getenv("JWT_SECRET_KEY"); secret != "" {
+			cfg.JWTSecretKey = secret
+		}
+		if env := os.Getenv("ENV"); env != "" {
+			cfg.Env = env
+		}
 
-	dbConfig := DBConfig{
-		DatabaseUri: dbUri,
-		PoolSize:    50,
-		DBTimeout:   5000,
-	}
+		globalCfg = cfg
+	})
 
-	return &Config{
-		ServerAddr:         ":8080",
-		ServiceName:        fmt.Sprintf("Diploma-1"),
-		Env:                "prod",
-		BaseURL:            baseURL,
-		JWTCookieName:      "auth_token",
-		JWTSecretKey:       secret,
-		JWTTokenExp:        time.Hour * 720,
-		DBConfig:           &dbConfig,
-		AccrualBaseURL:     "http://accrual:8080",
-		AccrualHTTPTimeout: 30 * time.Second,
-		AccrualRPM:         60,
-	}
+	return globalCfg
 }

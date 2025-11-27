@@ -70,7 +70,6 @@ func (s *SqlConnection) CloseSqlInstance() {
 }
 
 func CreateTables(db *SqlConnection) error {
-
 	ctx := context.Background()
 
 	sqlQueries := []string{
@@ -82,41 +81,30 @@ func CreateTables(db *SqlConnection) error {
 		);
 		CREATE UNIQUE INDEX IF NOT EXISTS ux_logins_login ON logins (login);`,
 
-		`CREATE TABLE IF NOT EXISTS orders (
-			number       text PRIMARY KEY,
-			user_id      bigint NOT NULL REFERENCES logins(id),
-			status       text NOT NULL DEFAULT 'NEW',
-			accrual      numeric(12,2),
-			uploaded_at  timestamptz NOT NULL DEFAULT now()
+		// ====== ПАРЫ ЛОГИН/ПАРОЛЬ ======
+		`CREATE TABLE IF NOT EXISTS passwords (
+			user_id     bigint NOT NULL REFERENCES logins(id),
+			id          text   NOT NULL,                         -- ID записи, задаётся клиентом
+			login       text   NOT NULL,                         -- логин для этого ресурса
+			password    text   NOT NULL,                         -- позже можно шифровать
+			meta        text,                                    -- произвольное описание/мета
+			created_at  timestamptz NOT NULL DEFAULT now(),
+			updated_at  timestamptz NOT NULL DEFAULT now(),
+			is_deleted  bool        NOT NULL DEFAULT false,
+			PRIMARY KEY (user_id, id)
 		);
-		CREATE INDEX IF NOT EXISTS ix_orders_user_id ON orders(user_id);`,
-
-		`CREATE TABLE IF NOT EXISTS balances (
-			user_id    bigint PRIMARY KEY REFERENCES logins(id),
-			current    numeric(14,2) NOT NULL DEFAULT 0,
-			withdrawn  numeric(14,2) NOT NULL DEFAULT 0,
-			updated_at timestamptz   NOT NULL DEFAULT now()
-		);`,
-
-		`CREATE TABLE IF NOT EXISTS withdrawals (
-			id           bigserial PRIMARY KEY,
-			user_id      bigint NOT NULL REFERENCES logins(id),
-			order_number text   NOT NULL UNIQUE,
-			amount       numeric(14,2) NOT NULL,
-			processed_at timestamptz   NOT NULL DEFAULT now()
-		);
-		CREATE INDEX IF NOT EXISTS ix_withdrawals_user_id ON withdrawals(user_id);`,
+		CREATE INDEX IF NOT EXISTS ix_passwords_user_id ON passwords(user_id);
+		CREATE INDEX IF NOT EXISTS ix_passwords_user_id_updated_at
+			ON passwords(user_id, updated_at);`,
 	}
 
 	for i, sqlQuery := range sqlQueries {
-		_, err := db.PgSql.Exec(ctx, sqlQuery)
-		if err != nil {
+		if _, err := db.PgSql.Exec(ctx, sqlQuery); err != nil {
 			return fmt.Errorf("error executing query %d: %w", i, err)
 		}
 	}
 
 	return nil
-
 }
 
 func PrepareDB(db *SqlConnection) {

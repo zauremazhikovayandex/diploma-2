@@ -9,6 +9,7 @@ import (
 	"diploma-2/pkg/logger"
 	"diploma-2/pkg/logger/message"
 	"errors"
+	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -65,6 +66,7 @@ func addrFromBaseURL(raw, fallback string) string {
 func main() {
 
 	// Init Config
+	flag.Parse()
 	cfg := config.InitConfig()
 
 	// Init logger
@@ -90,6 +92,11 @@ func main() {
 	rout.GET("health", api.GetHealthCheck)
 	rout.POST("/api/user/register", api.PostRegister)
 	rout.POST("/api/user/login", api.PostLogin)
+
+	// passwords
+	rout.POST("/api/v1/passwords", api.PostPassword)
+	rout.GET("/api/v1/passwords/:id", api.GetPasswordHandler)
+	rout.GET("/api/v1/passwords", api.GetPasswordsListHandler)
 
 	addr := addrFromBaseURL(cfg.BaseURL, cfg.ServerAddr)
 	Srv := &http.Server{
