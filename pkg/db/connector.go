@@ -2,17 +2,20 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"diploma-2/pkg/config"
 	"diploma-2/pkg/logger"
 	"diploma-2/pkg/logger/message"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	"sync"
 	"time"
 )
 
 type SqlConnection struct {
-	PgSql   *pgxpool.Pool
+	PgSql   *pgxpool.Pool // основной пул для работы приложения (pgx)
+	SqlDB   *sql.DB       // адаптер для database/sql — нужен migrate (database/pgx/v5)
 	Timeout time.Duration
 }
 
@@ -38,9 +41,11 @@ func SqlInstance(cfg *config.DBConfig) (*SqlConnection, error) {
 
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
-		dbPool, err := pgxpool.ConnectConfig(ctx, pgCfg)
+
+		// В pgx/v5 вместо ConnectConfig используем NewWithConfig
+		dbPool, err := pgxpool.NewWithConfig(ctx, pgCfg)
 		if err != nil {
-			initErr = err
+			initErr = fmt.Errorf("pgxpool.NewWithConfig: %w", err)
 			return
 		}
 
@@ -49,8 +54,13 @@ func SqlInstance(cfg *config.DBConfig) (*SqlConnection, error) {
 			initErr = fmt.Errorf("failed ping: %w", err)
 			return
 		}
+
+		// Адаптер database/sql поверх pgxpool.Pool — нужен для migrate/database/pgx/v5
+		sqlDB := stdlib.OpenDBFromPool(dbPool)
+
 		inst = &SqlConnection{
 			PgSql:   dbPool,
+			SqlDB:   sqlDB,
 			Timeout: timeout,
 		}
 	})
@@ -62,7 +72,16 @@ func SqlInstance(cfg *config.DBConfig) (*SqlConnection, error) {
 }
 
 func (s *SqlConnection) CloseSqlInstance() {
-	if s != nil && s.PgSql != nil {
+	if s == nil {
+		return
+	}
+
+	// Закрываем адаптер *sql.DB (он НЕ закрывает PgSql, только свои ресурсы)
+	if s.SqlDB != nil {
+		_ = s.SqlDB.Close()
+	}
+
+	if s.PgSql != nil {
 		logger.Log.Info(&message.LogMessage{Message: "Closing database connection pool..."})
 		s.PgSql.Close()
 		logger.Log.Info(&message.LogMessage{Message: "Database connection pool closed."})

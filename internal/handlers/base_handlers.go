@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"diploma-2/internal/auth"
+	"diploma-2/internal/services"
 	"diploma-2/pkg/config"
 	"diploma-2/pkg/db"
 	"errors"
@@ -15,14 +16,19 @@ type Deps struct {
 }
 
 type API struct {
-	cfg *config.Config
-	db  *db.SqlConnection
+	cfg              *config.Config
+	passwordsService *services.PasswordsService
+	usersService     *services.UsersService
 }
 
 func New(d Deps) *API {
+	usersSvc := services.NewUsersService(d.DB)
+	passwordsSvc := services.NewPasswordsService(d.Cfg, d.DB, usersSvc)
+
 	return &API{
-		cfg: d.Cfg,
-		db:  d.DB,
+		cfg:              d.Cfg,
+		passwordsService: passwordsSvc,
+		usersService:     usersSvc,
 	}
 }
 
@@ -37,8 +43,9 @@ func (a *API) PostRegister(ctx *gin.Context) {
 		return
 	}
 
-	if err := auth.CreateUser(ctx.Request.Context(), a.db, req.Login, req.Password); err != nil {
-		if errors.Is(err, auth.ErrLoginExists) {
+	// Вызываем сервис вместо repositories.CreateUser
+	if err := a.usersService.Register(ctx.Request.Context(), req.Login, req.Password); err != nil {
+		if errors.Is(err, services.ErrLoginExists) {
 			ctx.JSON(http.StatusConflict, gin.H{"error": "login already exists"})
 			return
 		}
@@ -46,12 +53,12 @@ func (a *API) PostRegister(ctx *gin.Context) {
 		return
 	}
 
+	// Выдача JWT cookie остаётся в handler-е — это HTTP-деталь, не бизнес-логика.
 	if _, err := auth.SetTokenCookie(ctx, a.cfg, ctx.Writer, req.Login); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "token generation failed"})
 		return
 	}
 
-	//  200 — «пользователь успешно зарегистрирован и аутентифицирован»
 	ctx.JSON(http.StatusOK, gin.H{"status": "OK"})
 }
 
@@ -62,9 +69,9 @@ func (a *API) PostLogin(ctx *gin.Context) {
 		return
 	}
 
-	// Проверяем логин/пароль
-	if err := auth.AuthenticateUser(ctx.Request.Context(), a.db, req.Login, req.Password); err != nil {
-		if errors.Is(err, auth.ErrInvalidCredentials) {
+	// Проверяем логин/пароль через сервис
+	if err := a.usersService.Authenticate(ctx.Request.Context(), req.Login, req.Password); err != nil {
+		if errors.Is(err, services.ErrInvalidCredentials) {
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid login or password"})
 			return
 		}

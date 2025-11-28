@@ -20,10 +20,10 @@ type PasswordRecord struct {
 	Meta      *string   // произвольное описание / мета
 	CreatedAt time.Time // когда запись создана
 	UpdatedAt time.Time // когда запись обновлена
-	IsDeleted bool      // удаление
+	IsDeleted bool      // признак, удален или нет
 }
 
-// PasswordRequest — тело запроса на создание/обновление записи.
+// PasswordRequest — тело запроса на создание/обновление записи
 type PasswordRequest struct {
 	ID       string  `json:"id" binding:"required"`       // ID записи, задаётся клиентом
 	Login    string  `json:"login" binding:"required"`    // логин для внешнего сервиса
@@ -94,7 +94,6 @@ func UpsertPassword(ctx context.Context, conn *db.SqlConnection, rec *PasswordRe
 }
 
 // GetPassword возвращает одну запись по user_id + id.
-// Если записей нет — (*PasswordRecord, nil, nil) => (nil, nil).
 func GetPassword(ctx context.Context, conn *db.SqlConnection, userID int64, id string) (*PasswordRecord, error) {
 	const q = `
 		SELECT user_id, id, login, password, meta, created_at, updated_at, is_deleted
@@ -118,7 +117,7 @@ func GetPassword(ctx context.Context, conn *db.SqlConnection, userID int64, id s
 	return rec, nil
 }
 
-// ListPasswords возвращает все записи пользователя, отсортированные по updated_at.
+// ListPasswords возвращает все записи пользователя, отсортированные по updated_at
 func ListPasswords(ctx context.Context, conn *db.SqlConnection, userID int64) ([]*PasswordRecord, error) {
 	const q = `
 		SELECT user_id, id, login, password, meta, created_at, updated_at, is_deleted
@@ -144,7 +143,7 @@ func ListPasswords(ctx context.Context, conn *db.SqlConnection, userID int64) ([
 }
 
 // scanPasswordRow — хелпер для преобразования []any в PasswordRecord.
-// Для того чтобы преобразовать то, как pgx возвращает типы для bigint/text/timestamptz/bool.
+// Для того чтобы преобразовать то, как pgx возвращает типы для bigint/text/timestamptz/bool
 func scanPasswordRow(row []any) (*PasswordRecord, error) {
 	if len(row) != 8 {
 		return nil, fmt.Errorf("unexpected column count: %d", len(row))

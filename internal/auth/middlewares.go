@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"diploma-2/internal/repositories"
 	"diploma-2/pkg/config"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -60,9 +61,9 @@ func MiddlewareAuth(cfg *config.Config) gin.HandlerFunc {
 		_, _ = SetTokenCookie(c, cfg, c.Writer, login)
 
 		// Кладём login в контекст
-		ctx := context.WithValue(c.Request.Context(), UserLoginKey, login)
+		ctx := context.WithValue(c.Request.Context(), repositories.UserLoginKey, login)
 		c.Request = c.Request.WithContext(ctx)
-		c.Set(string(UserLoginKey), login)
+		c.Set(string(repositories.UserLoginKey), login)
 
 		c.Next()
 	}
