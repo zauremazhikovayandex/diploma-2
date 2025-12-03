@@ -1,0 +1,22 @@
+service_name: "Diploma-2"
+env: "prod"
+
+# Адрес HTTP-сервера
+server_addr: ":8080"
+
+# Базовый URL сервиса
+base_url: "http://localhost:8080"
+
+# JWT
+jwt_cookie_name: "auth_token"
+jwt_secret_key: "supersecretkey"
+jwt_token_exp: "720h"             # 30 дней
+
+# БД
+db:
+  database_uri: "host=localhost port=5432 user=postgres password=postgres dbname=aviato sslmode=disable"
+  pool_size: 50
+  db_timeout: 5000
+
+# Ключ шифрования пользовательских данных
+data_enc_key: "dev-insecure-data-key"
