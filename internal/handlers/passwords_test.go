@@ -2,11 +2,8 @@ package handlers
 
 import (
 	"bytes"
-	"diploma-2/pkg/config"
-	"diploma-2/pkg/db"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -14,12 +11,7 @@ import (
 
 // helper для создания API без реальной БД (db *SqlConnection можно оставить nil, если мы не доходим до репозитория).
 func newTestAPI() *API {
-	os.Setenv("JWT_SECRET_KEY", "secret_test")
-	cfg := config.InitConfig()
-	return &API{
-		cfg: cfg,
-		db:  &db.SqlConnection{}, // заглушка, в тестах ниже мы не будем до неё доходить
-	}
+	return &API{}
 }
 
 // helper для gin-контекста
@@ -38,7 +30,6 @@ func TestPostPassword_UnauthorizedWhenNoLoginInContext(t *testing.T) {
 
 	c, w := newTestContext("POST", "/api/v1/passwords", []byte(`{}`))
 
-	// В контекст пользователя логин не кладём — имитируем отсутствие auth.
 	api.PostPassword(c)
 
 	if w.Code != http.StatusUnauthorized {
@@ -52,7 +43,6 @@ func TestPostPassword_BadRequestOnInvalidJSON(t *testing.T) {
 
 	c, w := newTestContext("POST", "/api/v1/passwords", []byte(`{invalid json`))
 
-	// Подделываем логин пользователя в gin.Context (как будто прошли auth middleware).
 	c.Set("user_login", "testuser")
 
 	api.PostPassword(c)

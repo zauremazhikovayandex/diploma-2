@@ -8,24 +8,21 @@ import (
 	"net/http"
 )
 
-// PostPassword создаёт или обновляет запись пароля для текущего пользователя.
-func (a *API) PostPassword(c *gin.Context) {
-	// 1. логин из контекста
+// PostBinary создаёт или обновляет бинарную запись пользователя.
+func (a *API) PostBinary(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	// 2. парсим JSON
-	var req services.PasswordRequest
+	var req services.BinaryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
-	// 3. вызываем сервисный слой
-	resp, err := a.passwordsService.CreateOrUpdatePassword(c.Request.Context(), login, &req)
+	resp, err := a.binariesService.CreateOrUpdateBinary(c.Request.Context(), login, &req)
 	if err != nil {
 		if errors.Is(err, services.ErrUserNotFound) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
@@ -35,12 +32,11 @@ func (a *API) PostPassword(c *gin.Context) {
 		return
 	}
 
-	// 4. HTTP-ответ
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetPasswordHandler возвращает одну запись пароля по её идентификатору.
-func (a *API) GetPasswordHandler(c *gin.Context) {
+// GetBinaryHandler возвращает одну бинарную запись по её идентификатору.
+func (a *API) GetBinaryHandler(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -53,13 +49,13 @@ func (a *API) GetPasswordHandler(c *gin.Context) {
 		return
 	}
 
-	resp, err := a.passwordsService.GetPassword(c.Request.Context(), login, id)
+	resp, err := a.binariesService.GetBinary(c.Request.Context(), login, id)
 	if err != nil {
 		if errors.Is(err, services.ErrUserNotFound) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
 			return
 		}
-		if errors.Is(err, services.ErrPasswordNotFound) {
+		if errors.Is(err, services.ErrBinaryNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 			return
 		}
@@ -74,15 +70,15 @@ func (a *API) GetPasswordHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetPasswordsListHandler возвращает список всех паролей текущего пользователя.
-func (a *API) GetPasswordsListHandler(c *gin.Context) {
+// GetBinariesListHandler возвращает список всех бинарных записей пользователя.
+func (a *API) GetBinariesListHandler(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	resp, err := a.passwordsService.ListPasswords(c.Request.Context(), login)
+	resp, err := a.binariesService.ListBinaries(c.Request.Context(), login)
 	if err != nil {
 		if errors.Is(err, services.ErrUserNotFound) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})

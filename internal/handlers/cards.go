@@ -8,58 +8,58 @@ import (
 	"net/http"
 )
 
-// PostPassword создаёт или обновляет запись пароля для текущего пользователя.
-func (a *API) PostPassword(c *gin.Context) {
-	// 1. логин из контекста
+// PostCard создаёт или обновляет данные банковской карты пользователя.
+func (a *API) PostCard(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	// 2. парсим JSON
-	var req services.PasswordRequest
+	var req services.CardRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
-	// 3. вызываем сервисный слой
-	resp, err := a.passwordsService.CreateOrUpdatePassword(c.Request.Context(), login, &req)
+	resp, err := a.cardsService.CreateOrUpdateCard(c.Request.Context(), login, &req)
 	if err != nil {
 		if errors.Is(err, services.ErrUserNotFound) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+			return
+		}
+		if errors.Is(err, services.ErrDecryptionFailed) {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "decryption failed"})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
-	// 4. HTTP-ответ
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetPasswordHandler возвращает одну запись пароля по её идентификатору.
-func (a *API) GetPasswordHandler(c *gin.Context) {
+// GetCardHandler возвращает данные карты по её маскированному PAN.
+func (a *API) GetCardHandler(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	id := c.Param("id")
-	if id == "" {
+	cardPAN := c.Param("id")
+	if cardPAN == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
 		return
 	}
 
-	resp, err := a.passwordsService.GetPassword(c.Request.Context(), login, id)
+	resp, err := a.cardsService.GetCard(c.Request.Context(), login, cardPAN)
 	if err != nil {
 		if errors.Is(err, services.ErrUserNotFound) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
 			return
 		}
-		if errors.Is(err, services.ErrPasswordNotFound) {
+		if errors.Is(err, services.ErrCardNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 			return
 		}
@@ -74,15 +74,15 @@ func (a *API) GetPasswordHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetPasswordsListHandler возвращает список всех паролей текущего пользователя.
-func (a *API) GetPasswordsListHandler(c *gin.Context) {
+// GetCardsListHandler возвращает список всех карт пользователя.
+func (a *API) GetCardsListHandler(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	resp, err := a.passwordsService.ListPasswords(c.Request.Context(), login)
+	resp, err := a.cardsService.ListCards(c.Request.Context(), login)
 	if err != nil {
 		if errors.Is(err, services.ErrUserNotFound) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})

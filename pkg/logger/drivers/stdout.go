@@ -8,7 +8,8 @@ import (
 	"os"
 )
 
-// StdoutDriver — драйвер логирования на базе logrus, пишущий в stdout.
+// StdoutDriver реализует интерфейс логгера и пишет сообщения в stdout
+// в формате JSON с использованием logrus.
 type StdoutDriver struct {
 	log   *logrus.Logger
 	level logrus.Level
@@ -56,7 +57,7 @@ func (l *StdoutDriver) write(level logrus.Level, msg *message.LogMessage) {
 	l.log.Log(level, string(j))
 }
 
-// MakeStdoutLogger создает и настраивает StdoutDriver по уровню.
+// MakeStdoutLogger создаёт и настраивает StdoutDriver с указанным уровнем логирования.
 func MakeStdoutLogger(level string) *StdoutDriver {
 	var lev logrus.Level
 

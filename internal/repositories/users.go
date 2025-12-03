@@ -6,10 +6,10 @@ import (
 	"fmt"
 )
 
-// GetUserIDByLogin возвращает id пользователя по его логину.
-// Если пользователь не найден — вернёт (0, ErrUserNotFound).
+// ErrUserNotFound возвращается, если пользователь с указанным логином не найден в БД.
 var ErrUserNotFound = fmt.Errorf("user not found")
 
+// GetUserIDByLogin возвращает идентификатор пользователя по его логину.
 func GetUserIDByLogin(ctx context.Context, conn *db.SqlConnection, login string) (int64, error) {
 	const q = `
 		SELECT id

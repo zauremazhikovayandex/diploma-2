@@ -10,12 +10,14 @@ import (
 	"time"
 )
 
+// PasswordsService управляет созданием, хранением и выдачей паролей пользователя.
 type PasswordsService struct {
 	cfg   *config.Config
 	db    *db.SqlConnection
 	users *UsersService
 }
 
+// PasswordRequest конструкция входящего запроса
 type PasswordRequest struct {
 	ID       string  `json:"id" binding:"required"`
 	Login    string  `json:"login" binding:"required"`
@@ -23,6 +25,7 @@ type PasswordRequest struct {
 	Meta     *string `json:"meta"`
 }
 
+// PasswordResponse конструкция исходящего ответа
 type PasswordResponse struct {
 	ID        string    `json:"id"`
 	Login     string    `json:"login"`
@@ -33,6 +36,7 @@ type PasswordResponse struct {
 	IsDeleted bool      `json:"is_deleted"`
 }
 
+// NewPasswordsService создаёт новый сервис паролей.
 func NewPasswordsService(cfg *config.Config, dbConn *db.SqlConnection, users *UsersService) *PasswordsService {
 	return &PasswordsService{
 		cfg:   cfg,
@@ -41,6 +45,7 @@ func NewPasswordsService(cfg *config.Config, dbConn *db.SqlConnection, users *Us
 	}
 }
 
+// CreateOrUpdatePassword создаёт или обновляет запись пароля для указанного логина.
 func (s *PasswordsService) CreateOrUpdatePassword(
 	ctx context.Context,
 	login string,
@@ -93,7 +98,7 @@ func (s *PasswordsService) CreateOrUpdatePassword(
 	}, nil
 }
 
-// GetPassword — логика GET /api/v1/passwords/:id
+// GetPassword возвращает одну запись пароля по логину пользователя и идентификатору записи.
 func (s *PasswordsService) GetPassword(
 	ctx context.Context,
 	login, id string,
@@ -130,7 +135,7 @@ func (s *PasswordsService) GetPassword(
 	}, nil
 }
 
-// ListPasswords — логика GET /api/v1/passwords
+// ListPasswords возвращает все пароли пользователя.
 func (s *PasswordsService) ListPasswords(
 	ctx context.Context,
 	login string,

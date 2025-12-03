@@ -11,8 +11,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file" // file://
 )
 
-// RunMigrations запускает все up-миграции из migrationsDir
-// dbName – логическое имя БД
+// RunMigrations применяет все доступные up-миграции к указанной базе данных.
 func RunMigrations(conn *SqlConnection, migrationsDir, dbName string) error {
 	driver, err := migratepgx.WithInstance(conn.SqlDB, &migratepgx.Config{})
 	if err != nil {
@@ -35,7 +34,7 @@ func RunMigrations(conn *SqlConnection, migrationsDir, dbName string) error {
 	return nil
 }
 
-// PrepareDB - дергает миграции
+// PrepareDB запускает миграции для сервисной базы данных и логирует результат.
 func PrepareDB(conn *SqlConnection) {
 	if err := RunMigrations(conn, "migrations", "diploma"); err != nil {
 		logger.Log.Error(&message.LogMessage{

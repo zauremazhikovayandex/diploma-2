@@ -7,11 +7,12 @@ import (
 	"time"
 )
 
+// PasswordSecret представляет собой структуру, которая шифруется и хранит пароль.
 type PasswordSecret struct {
 	Password string `json:"password"`
 }
 
-// PasswordRecord — доменная модель для таблицы passwords.
+// PasswordRecord описывает строку таблицы passwords в базе данных.
 type PasswordRecord struct {
 	UserID    int64     // FK на logins.id
 	ID        string    // ID записи (то, что задаёт клиент)
@@ -23,7 +24,7 @@ type PasswordRecord struct {
 	IsDeleted bool      // признак, удален или нет
 }
 
-// PasswordRequest — тело запроса на создание/обновление записи
+// PasswordRequest описывает тело HTTP-запроса на создание/обновление пароля.
 type PasswordRequest struct {
 	ID       string  `json:"id" binding:"required"`       // ID записи, задаётся клиентом
 	Login    string  `json:"login" binding:"required"`    // логин для внешнего сервиса
@@ -31,7 +32,7 @@ type PasswordRequest struct {
 	Meta     *string `json:"meta"`                        // произвольное описание/мета
 }
 
-// PasswordResponse — то, что отдаём клиенту.
+// PasswordResponse описывает данные пароля, возвращаемые клиенту.
 type PasswordResponse struct {
 	ID        string    `json:"id"`
 	Login     string    `json:"login"`
@@ -42,7 +43,7 @@ type PasswordResponse struct {
 	IsDeleted bool      `json:"is_deleted"`
 }
 
-// UpsertPassword создаёт или обновляет запись паролей.
+// UpsertPassword создаёт или обновляет запись пароля пользователя.
 func UpsertPassword(ctx context.Context, conn *db.SqlConnection, rec *PasswordRecord) error {
 	if rec == nil {
 		return fmt.Errorf("nil PasswordRecord")
@@ -93,7 +94,7 @@ func UpsertPassword(ctx context.Context, conn *db.SqlConnection, rec *PasswordRe
 	return err
 }
 
-// GetPassword возвращает одну запись по user_id + id.
+// GetPassword возвращает одну запись пароля по user_id и идентификатору записи.
 func GetPassword(ctx context.Context, conn *db.SqlConnection, userID int64, id string) (*PasswordRecord, error) {
 	const q = `
 		SELECT user_id, id, login, password, meta, created_at, updated_at, is_deleted
@@ -117,7 +118,7 @@ func GetPassword(ctx context.Context, conn *db.SqlConnection, userID int64, id s
 	return rec, nil
 }
 
-// ListPasswords возвращает все записи пользователя, отсортированные по updated_at
+// ListPasswords возвращает все записи паролей пользователя, отсортированные по времени обновления.
 func ListPasswords(ctx context.Context, conn *db.SqlConnection, userID int64) ([]*PasswordRecord, error) {
 	const q = `
 		SELECT user_id, id, login, password, meta, created_at, updated_at, is_deleted

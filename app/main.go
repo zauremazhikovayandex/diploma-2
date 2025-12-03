@@ -98,6 +98,21 @@ func main() {
 	rout.GET("/api/v1/passwords/:id", api.GetPasswordHandler)
 	rout.GET("/api/v1/passwords", api.GetPasswordsListHandler)
 
+	// texts
+	rout.POST("/api/v1/texts", api.PostText)
+	rout.GET("/api/v1/texts/:id", api.GetTextHandler)
+	rout.GET("/api/v1/texts", api.GetTextsListHandler)
+
+	// cards
+	rout.POST("/api/v1/cards", api.PostCard)
+	rout.GET("/api/v1/cards/:id", api.GetCardHandler)
+	rout.GET("/api/v1/cards", api.GetCardsListHandler)
+
+	// binaries
+	rout.POST("/api/v1/binaries", api.PostBinary)
+	rout.GET("/api/v1/binaries/:id", api.GetBinaryHandler)
+	rout.GET("/api/v1/binaries", api.GetBinariesListHandler)
+
 	addr := addrFromBaseURL(cfg.BaseURL, cfg.ServerAddr)
 	Srv := &http.Server{
 		Addr:    addr,

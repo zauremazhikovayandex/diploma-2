@@ -7,7 +7,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// SelectWithTimeout Возвращает все строки: каждая строка — []any со значениями всех колонок.
+// SelectWithTimeout выполняет SELECT-запрос и возвращает все строки в виде [][]any
+// с использованием контекста с таймаутом.
 func SelectWithTimeout(ctx context.Context, pool *pgxpool.Pool, queryTimeout time.Duration, query string, args ...any) ([][]any, error) {
 	timeoutCtx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
@@ -32,7 +33,7 @@ func SelectWithTimeout(ctx context.Context, pool *pgxpool.Pool, queryTimeout tim
 	return results, nil
 }
 
-// SelectOneWithTimeout Вернуть только первую строку (или nil, если строк нет).
+// SelectOneWithTimeout выполняет SELECT-запрос и возвращает только первую строку.
 func SelectOneWithTimeout(ctx context.Context, pool *pgxpool.Pool, queryTimeout time.Duration, query string, args ...any) ([]any, error) {
 	rows, err := SelectWithTimeout(ctx, pool, queryTimeout, query, args...)
 	if err != nil {
@@ -44,17 +45,17 @@ func SelectOneWithTimeout(ctx context.Context, pool *pgxpool.Pool, queryTimeout 
 	return rows[0], nil
 }
 
-// ExecuteDBQueryAll Универсальный вызов SELECT: все строки.
+// ExecuteDBQueryAll — универсальный helper для SELECT-запросов, возвращающих несколько строк.
 func ExecuteDBQueryAll(ctx context.Context, conn *SqlConnection, query string, params ...any) ([][]any, error) {
 	return SelectWithTimeout(ctx, conn.PgSql, conn.Timeout, query, params...)
 }
 
-// ExecuteDBQuery Универсальный вызов SELECT: только первая строка.
+// ExecuteDBQuery — helper для SELECT-запросов, возвращающих одну строку.
 func ExecuteDBQuery(ctx context.Context, conn *SqlConnection, query string, params ...any) ([]any, error) {
 	return SelectOneWithTimeout(ctx, conn.PgSql, conn.Timeout, query, params...)
 }
 
-// ExecWithTimeout Для INSERT/UPDATE/DELETE без возврата строк (без RETURNING)
+// ExecWithTimeout выполняет командный SQL-запрос (INSERT/UPDATE/DELETE) без возврата строк.
 func ExecWithTimeout(ctx context.Context, pool *pgxpool.Pool, queryTimeout time.Duration, query string, args ...any) (int64, error) {
 	timeoutCtx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
@@ -66,6 +67,7 @@ func ExecWithTimeout(ctx context.Context, pool *pgxpool.Pool, queryTimeout time.
 	return ct.RowsAffected(), nil
 }
 
+// ExecuteDBExec выполняет командный запрос к БД через SqlConnection.
 func ExecuteDBExec(ctx context.Context, conn *SqlConnection, query string, params ...any) (int64, error) {
 	return ExecWithTimeout(ctx, conn.PgSql, conn.Timeout, query, params...)
 }

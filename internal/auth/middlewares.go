@@ -27,6 +27,8 @@ func isPublicPath(path string) bool {
 	return path == "health"
 }
 
+// MiddlewareAuth проверяет JWT-токен в cookie или заголовке Authorization,
+// извлекает логин пользователя и кладёт его в контекст запроса.
 func MiddlewareAuth(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if isPublicPath(c.Request.URL.Path) {

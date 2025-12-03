@@ -10,32 +10,46 @@ import (
 	"net/http"
 )
 
+// Deps описывает зависимости, необходимые для инициализации HTTP API.
 type Deps struct {
 	Cfg *config.Config
 	DB  *db.SqlConnection
 }
 
+// API агрегирует сервисы и конфигурацию и реализует HTTP-обработчики REST API.
 type API struct {
 	cfg              *config.Config
 	passwordsService *services.PasswordsService
+	textsService     *services.TextsService
+	cardsService     *services.CardsService
+	binariesService  *services.BinariesService
 	usersService     *services.UsersService
 }
 
+// New создаёт экземпляр API и инициализирует сервисы, использующие БД и конфиг.
 func New(d Deps) *API {
 	usersSvc := services.NewUsersService(d.DB)
 	passwordsSvc := services.NewPasswordsService(d.Cfg, d.DB, usersSvc)
+	textsSvc := services.NewTextsService(d.Cfg, d.DB, usersSvc)
+	cardsSvc := services.NewCardsService(d.Cfg, d.DB, usersSvc)
+	binariesSvc := services.NewBinariesService(d.Cfg, d.DB, usersSvc)
 
 	return &API{
 		cfg:              d.Cfg,
 		passwordsService: passwordsSvc,
+		textsService:     textsSvc,
+		cardsService:     cardsSvc,
+		binariesService:  binariesSvc,
 		usersService:     usersSvc,
 	}
 }
 
+// GetHealthCheck обрабатывает запрос проверки живости сервиса.
 func (a *API) GetHealthCheck(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, "OK")
 }
 
+// PostRegister регистрирует нового пользователя и выдаёт ему JWT-токен.
 func (a *API) PostRegister(ctx *gin.Context) {
 	var req auth.LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -53,7 +67,6 @@ func (a *API) PostRegister(ctx *gin.Context) {
 		return
 	}
 
-	// Выдача JWT cookie остаётся в handler-е — это HTTP-деталь, не бизнес-логика.
 	if _, err := auth.SetTokenCookie(ctx, a.cfg, ctx.Writer, req.Login); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "token generation failed"})
 		return
@@ -62,6 +75,7 @@ func (a *API) PostRegister(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "OK"})
 }
 
+// PostLogin аутентифицирует пользователя и выдаёт JWT-токен.
 func (a *API) PostLogin(ctx *gin.Context) {
 	var req auth.LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {

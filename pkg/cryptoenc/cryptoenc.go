@@ -17,7 +17,7 @@ func deriveKey(keyStr string) []byte {
 	return sum[:] // 32 байта
 }
 
-// EncryptToString шифрует plaintext и возвращает base64(nonce||ciphertext)
+// EncryptToString шифрует строку и возвращает результат в виде base64(nonce||ciphertext).
 func EncryptToString(plaintext string, keyStr string) (string, error) {
 	key := deriveKey(keyStr)
 
@@ -42,7 +42,7 @@ func EncryptToString(plaintext string, keyStr string) (string, error) {
 	return base64.StdEncoding.EncodeToString(buf), nil
 }
 
-// DecryptFromString принимает base64(nonce||ciphertext) и ключ — возвращает plaintext
+// DecryptFromString расшифровывает строку base64(nonce||ciphertext) и возвращает исходный plaintext.
 func DecryptFromString(data string, keyStr string) (string, error) {
 	key := deriveKey(keyStr)
 
@@ -74,8 +74,7 @@ func DecryptFromString(data string, keyStr string) (string, error) {
 	return string(plain), nil
 }
 
-// EncryptJSON принимает любую структуру/мапу, маршалит в JSON и шифрует.
-// Возвращает base64(nonce||ciphertext) как строку.
+// EncryptJSON сериализует значение в JSON и шифрует его, возвращая base64-строку.
 func EncryptJSON(v any, keyStr string) (string, error) {
 	data, err := json.Marshal(v)
 	if err != nil {
@@ -84,8 +83,7 @@ func EncryptJSON(v any, keyStr string) (string, error) {
 	return EncryptToString(string(data), keyStr)
 }
 
-// DecryptJSON расшифровывает base64(nonce||ciphertext), а затем делает json.Unmarshal в out.
-// out должен быть указателем на структуру/мапу.
+// DecryptJSON расшифровывает base64-строку, а затем выполняет json.Unmarshal в out.
 func DecryptJSON(enc string, keyStr string, out any) error {
 	plain, err := DecryptFromString(enc, keyStr)
 	if err != nil {
