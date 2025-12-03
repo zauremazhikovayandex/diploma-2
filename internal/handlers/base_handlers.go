@@ -18,16 +18,25 @@ type Deps struct {
 type API struct {
 	cfg              *config.Config
 	passwordsService *services.PasswordsService
+	textsService     *services.TextsService
+	cardsService     *services.CardsService
+	binariesService  *services.BinariesService
 	usersService     *services.UsersService
 }
 
 func New(d Deps) *API {
 	usersSvc := services.NewUsersService(d.DB)
 	passwordsSvc := services.NewPasswordsService(d.Cfg, d.DB, usersSvc)
+	textsSvc := services.NewTextsService(d.Cfg, d.DB, usersSvc)
+	cardsSvc := services.NewCardsService(d.Cfg, d.DB, usersSvc)
+	binariesSvc := services.NewBinariesService(d.Cfg, d.DB, usersSvc)
 
 	return &API{
 		cfg:              d.Cfg,
 		passwordsService: passwordsSvc,
+		textsService:     textsSvc,
+		cardsService:     cardsSvc,
+		binariesService:  binariesSvc,
 		usersService:     usersSvc,
 	}
 }
@@ -53,7 +62,6 @@ func (a *API) PostRegister(ctx *gin.Context) {
 		return
 	}
 
-	// Выдача JWT cookie остаётся в handler-е — это HTTP-деталь, не бизнес-логика.
 	if _, err := auth.SetTokenCookie(ctx, a.cfg, ctx.Writer, req.Login); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "token generation failed"})
 		return

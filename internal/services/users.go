@@ -12,7 +12,10 @@ var (
 	ErrUserNotFound       = errors.New("user not found")
 	ErrLoginExists        = errors.New("login already exists")
 	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrTextNotFound       = errors.New("text not found")
 	ErrPasswordNotFound   = errors.New("password not found")
+	ErrCardNotFound       = errors.New("card not found")
+	ErrBinaryNotFound     = errors.New("binary not found")
 	ErrDecryptionFailed   = errors.New("decryption failed")
 )
 
