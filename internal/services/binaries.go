@@ -10,18 +10,21 @@ import (
 	"time"
 )
 
+// BinariesService управляет созданием, хранением бинарных данных.
 type BinariesService struct {
 	cfg   *config.Config
 	db    *db.SqlConnection
 	users *UsersService
 }
 
+// BinaryRequest конструкция входящего запроса
 type BinaryRequest struct {
 	ID   string  `json:"id" binding:"required"`   // ID записи (задаётся клиентом)
 	Data string  `json:"data" binding:"required"` // произвольные бинарные данные (например, base64)
 	Meta *string `json:"meta"`                    // произвольная мета
 }
 
+// BinaryResponse конструкция исходящего ответа
 type BinaryResponse struct {
 	ID        string    `json:"id"`
 	Data      string    `json:"data"`
@@ -31,6 +34,7 @@ type BinaryResponse struct {
 	IsDeleted bool      `json:"is_deleted"`
 }
 
+// NewBinariesService создаёт новый сервис бинарных данных.
 func NewBinariesService(cfg *config.Config, dbConn *db.SqlConnection, users *UsersService) *BinariesService {
 	return &BinariesService{
 		cfg:   cfg,
@@ -91,7 +95,7 @@ func (s *BinariesService) CreateOrUpdateBinary(
 	}, nil
 }
 
-// GetBinary — логика GET /api/v1/binaries/:id
+// GetBinary возвращает одну запись бинарных данных по логину пользователя и идентификатору записи.
 func (s *BinariesService) GetBinary(
 	ctx context.Context,
 	login, id string,
@@ -127,7 +131,7 @@ func (s *BinariesService) GetBinary(
 	}, nil
 }
 
-// ListBinaries — логика GET /api/v1/binaries
+// ListBinaries возвращает все бинарные данные пользователя.
 func (s *BinariesService) ListBinaries(
 	ctx context.Context,
 	login string,

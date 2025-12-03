@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+// SqlConnection инкапсулирует пул соединений pgx и адаптер database/sql,
+// а также общий таймаут для запросов к БД.
 type SqlConnection struct {
 	PgSql   *pgxpool.Pool // основной пул для работы приложения (pgx)
 	SqlDB   *sql.DB       // адаптер для database/sql — нужен migrate (database/pgx/v5)
@@ -24,6 +26,7 @@ var (
 	once sync.Once
 )
 
+// SqlInstance создаёт и инициализирует глобальное подключение к БД Postgres.
 func SqlInstance(cfg *config.DBConfig) (*SqlConnection, error) {
 	var initErr error
 	timeout := time.Duration(cfg.DBTimeout) * time.Millisecond // ← умножаем ОДИН раз
@@ -71,6 +74,7 @@ func SqlInstance(cfg *config.DBConfig) (*SqlConnection, error) {
 	return inst, nil
 }
 
+// CloseSqlInstance корректно закрывает пул соединений и связанные ресурсы БД.
 func (s *SqlConnection) CloseSqlInstance() {
 	if s == nil {
 		return

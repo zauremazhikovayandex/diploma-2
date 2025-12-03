@@ -9,12 +9,23 @@ import (
 	"time"
 )
 
+// ErrNoCookie возвращается, если JWT-токен не найден в cookie.
 var ErrNoCookie = errors.New("no cookie")
+
+// ErrNoAuthHeader возвращается, если заголовок Authorization отсутствует.
 var ErrNoAuthHeader = errors.New("no auth header")
+
+// ErrBadAuthHeader возвращается, если заголовок Authorization имеет некорректный формат.
 var ErrBadAuthHeader = errors.New("bad auth header")
+
+// ErrUnexpectedSigningMethod возвращается, если токен подписан неожиданным методом.
 var ErrUnexpectedSigningMethod = errors.New("unexpected signing method")
+
+// ErrInvalidToken возвращается, если JWT-токен невалиден или подпись не сходится.
 var ErrInvalidToken = errors.New("invalid token")
 
+// GenerateJWTToken создаёт и подписывает JWT-токен для указанного логина
+// с параметрами из конфигурации.
 func GenerateJWTToken(login string, cfg *config.Config) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{

@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-// PostCard POST /api/v1/cards
+// PostCard создаёт или обновляет данные банковской карты пользователя.
 func (a *API) PostCard(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {
@@ -39,7 +39,7 @@ func (a *API) PostCard(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetCardHandler GET /api/v1/cards/:id
+// GetCardHandler возвращает данные карты по её маскированному PAN.
 func (a *API) GetCardHandler(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {
@@ -74,7 +74,7 @@ func (a *API) GetCardHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetCardsListHandler GET /api/v1/cards
+// GetCardsListHandler возвращает список всех карт пользователя.
 func (a *API) GetCardsListHandler(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {

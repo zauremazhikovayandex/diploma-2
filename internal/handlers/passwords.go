@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-// PostPassword POST /api/v1/passwords
+// PostPassword создаёт или обновляет запись пароля для текущего пользователя.
 func (a *API) PostPassword(c *gin.Context) {
 	// 1. логин из контекста
 	login, ok := auth.GetLoginFromCtx(c)
@@ -39,7 +39,7 @@ func (a *API) PostPassword(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetPasswordHandler GET /api/v1/passwords/:id
+// GetPasswordHandler возвращает одну запись пароля по её идентификатору.
 func (a *API) GetPasswordHandler(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {
@@ -74,7 +74,7 @@ func (a *API) GetPasswordHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetPasswordsListHandler GET /api/v1/passwords
+// GetPasswordsListHandler возвращает список всех паролей текущего пользователя.
 func (a *API) GetPasswordsListHandler(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {

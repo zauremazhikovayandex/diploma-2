@@ -10,18 +10,21 @@ import (
 	"time"
 )
 
+// TextsService управляет созданием, хранением текста.
 type TextsService struct {
 	cfg   *config.Config
 	db    *db.SqlConnection
 	users *UsersService
 }
 
+// TextRequest конструкция входящего запроса
 type TextRequest struct {
 	ID   string  `json:"id" binding:"required"`   // заголовок/ID записи
 	Text string  `json:"text" binding:"required"` // сам текст
 	Meta *string `json:"meta"`                    // произвольная мета
 }
 
+// TextResponse конструкция исходящего ответа
 type TextResponse struct {
 	ID        string    `json:"id"`
 	Text      string    `json:"text"`
@@ -31,6 +34,7 @@ type TextResponse struct {
 	IsDeleted bool      `json:"is_deleted"`
 }
 
+// NewTextsService создаёт новый сервис текстов.
 func NewTextsService(cfg *config.Config, dbConn *db.SqlConnection, users *UsersService) *TextsService {
 	return &TextsService{
 		cfg:   cfg,
@@ -39,6 +43,7 @@ func NewTextsService(cfg *config.Config, dbConn *db.SqlConnection, users *UsersS
 	}
 }
 
+// CreateOrUpdateText создаёт или обновляет запись текста для указанного логина.
 func (s *TextsService) CreateOrUpdateText(
 	ctx context.Context,
 	login string,
@@ -90,7 +95,7 @@ func (s *TextsService) CreateOrUpdateText(
 	}, nil
 }
 
-// GetText — логика GET /api/v1/texts/:id
+// GetText возвращает одну запись текста по логину пользователя и идентификатору записи.
 func (s *TextsService) GetText(
 	ctx context.Context,
 	login, id string,
@@ -126,7 +131,7 @@ func (s *TextsService) GetText(
 	}, nil
 }
 
-// ListTexts — логика GET /api/v1/texts
+// ListTexts возвращает все текста пользователя.
 func (s *TextsService) ListTexts(
 	ctx context.Context,
 	login string,

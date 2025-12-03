@@ -9,6 +9,8 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// Config описывает общую конфигурацию сервиса GophKeeper, включая адрес сервера,
+// параметры JWT, настройки БД и ключ шифрования пользовательских данных.
 type Config struct {
 	ServiceName   string        `yaml:"service_name"`
 	Env           string        `yaml:"env"`
@@ -21,6 +23,7 @@ type Config struct {
 	DataEncKey    string        `yaml:"data_enc_key"`
 }
 
+// DBConfig содержит настройки подключения к базе данных Postgres.
 type DBConfig struct {
 	DatabaseUri string `yaml:"database_uri" json:"database-uri"`
 	PoolSize    int    `yaml:"pool_size" json:"poolSize"`
@@ -34,7 +37,7 @@ var (
 
 const configPath = "config.yml"
 
-// InitConfig читается один раз из YAML-файла
+// InitConfig читает конфигурацию из YAML-файла и кэширует её для повторного использования.
 func InitConfig() *Config {
 	cfgOnce.Do(func() {
 		var cfg Config

@@ -8,16 +8,20 @@ import (
 	"time"
 )
 
+// Claims описывает JWT-претензии, использующиеся для авторизации пользователя.
 type Claims struct {
 	jwt.RegisteredClaims
 	Login string `json:"login"`
 }
 
+// LoginRequest описывает тело запроса на регистрацию или вход пользователя.
 type LoginRequest struct {
 	Login    string `json:"login" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
+// SetTokenCookie генерирует JWT-токен для указанного логина,
+// записывает его в cookie и дублирует в заголовок Authorization.
 func SetTokenCookie(c *gin.Context, cfg *config.Config, w http.ResponseWriter, login string) (string, error) {
 	token, err := GenerateJWTToken(login, cfg)
 	if err != nil {

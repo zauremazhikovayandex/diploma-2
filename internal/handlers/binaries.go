@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-// PostBinary POST /api/v1/binaries
+// PostBinary создаёт или обновляет бинарную запись пользователя.
 func (a *API) PostBinary(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {
@@ -35,7 +35,7 @@ func (a *API) PostBinary(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetBinaryHandler GET /api/v1/binaries/:id
+// GetBinaryHandler возвращает одну бинарную запись по её идентификатору.
 func (a *API) GetBinaryHandler(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {
@@ -70,7 +70,7 @@ func (a *API) GetBinaryHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetBinariesListHandler GET /api/v1/binaries
+// GetBinariesListHandler возвращает список всех бинарных записей пользователя.
 func (a *API) GetBinariesListHandler(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {

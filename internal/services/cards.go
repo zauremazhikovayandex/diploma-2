@@ -12,12 +12,14 @@ import (
 	"time"
 )
 
+// CardsService управляет созданием, хранением данных платежных карт пользователя.
 type CardsService struct {
 	cfg   *config.Config
 	db    *db.SqlConnection
 	users *UsersService
 }
 
+// CardRequest конструкция входящего запроса
 type CardRequest struct {
 	Number string  `json:"number" binding:"required"` // полный номер карты
 	Holder string  `json:"holder" binding:"required"` // имя владельца
@@ -26,6 +28,7 @@ type CardRequest struct {
 	Meta   *string `json:"meta"`                      // произвольная мета
 }
 
+// CardResponse конструкция исходящего ответа
 type CardResponse struct {
 	CardPAN string  `json:"card_pan"` // маскированный PAN, например 4600********5363
 	Number  string  `json:"number"`   // полный номер (для владельца, уже расшифрованный)
@@ -35,7 +38,7 @@ type CardResponse struct {
 	Meta    *string `json:"meta,omitempty"`
 }
 
-// NewCardsService создаёт сервис карт.
+// NewCardsService создаёт новый сервис платежных карт.
 func NewCardsService(cfg *config.Config, dbConn *db.SqlConnection, users *UsersService) *CardsService {
 	return &CardsService{
 		cfg:   cfg,
@@ -121,7 +124,7 @@ func (s *CardsService) CreateOrUpdateCard(
 	}, nil
 }
 
-// GetCard — логика GET /api/v1/cards/:id (id = card_pan).
+// GetCard возвращает одну запись карты по логину пользователя и идентификатору записи.
 func (s *CardsService) GetCard(
 	ctx context.Context,
 	login, cardPAN string,
@@ -157,7 +160,7 @@ func (s *CardsService) GetCard(
 	}, nil
 }
 
-// ListCards — логика GET /api/v1/cards.
+// ListCards возвращает все платежные карты пользователя.
 func (s *CardsService) ListCards(
 	ctx context.Context,
 	login string,

@@ -10,11 +10,13 @@ import (
 	"net/http"
 )
 
+// Deps описывает зависимости, необходимые для инициализации HTTP API.
 type Deps struct {
 	Cfg *config.Config
 	DB  *db.SqlConnection
 }
 
+// API агрегирует сервисы и конфигурацию и реализует HTTP-обработчики REST API.
 type API struct {
 	cfg              *config.Config
 	passwordsService *services.PasswordsService
@@ -24,6 +26,7 @@ type API struct {
 	usersService     *services.UsersService
 }
 
+// New создаёт экземпляр API и инициализирует сервисы, использующие БД и конфиг.
 func New(d Deps) *API {
 	usersSvc := services.NewUsersService(d.DB)
 	passwordsSvc := services.NewPasswordsService(d.Cfg, d.DB, usersSvc)
@@ -41,10 +44,12 @@ func New(d Deps) *API {
 	}
 }
 
+// GetHealthCheck обрабатывает запрос проверки живости сервиса.
 func (a *API) GetHealthCheck(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, "OK")
 }
 
+// PostRegister регистрирует нового пользователя и выдаёт ему JWT-токен.
 func (a *API) PostRegister(ctx *gin.Context) {
 	var req auth.LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -70,6 +75,7 @@ func (a *API) PostRegister(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "OK"})
 }
 
+// PostLogin аутентифицирует пользователя и выдаёт JWT-токен.
 func (a *API) PostLogin(ctx *gin.Context) {
 	var req auth.LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {

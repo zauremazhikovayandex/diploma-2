@@ -11,15 +11,19 @@ import (
 
 type ctxKey string
 
+// UserLoginKey используется как ключ для сохранения логина в контексте запроса.
 const (
 	UserLoginKey ctxKey = "user_login"
 )
 
-var ErrLoginExists = errors.New("login already exists")
-var ErrInvalidCredentials = errors.New("invalid credentials")
-var ErrLoginNotExists = errors.New("login does not exist")
-var ErrIncorrectPassword = errors.New("incorrect password")
+// ErrLoginExists возвращается, если логин уже занят другим пользователем.
+// ErrInvalidCredentials возвращается при неверной паре логин/пароль.
+var (
+	ErrLoginExists        = errors.New("login already exists")
+	ErrInvalidCredentials = errors.New("invalid credentials")
+)
 
+// CreateUser создаёт нового пользователя с указанным логином и паролем в БД.
 func CreateUser(ctx context.Context, conn *db.SqlConnection, login string, password string) error {
 
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -39,6 +43,7 @@ func CreateUser(ctx context.Context, conn *db.SqlConnection, login string, passw
 	return nil
 }
 
+// AuthenticateUser проверяет логин и пароль пользователя по данным в БД.
 func AuthenticateUser(ctx context.Context, conn *db.SqlConnection, login, password string) error {
 	// Берём только хэш
 	row, err := db.ExecuteDBQuery(ctx, conn, "SELECT password_hash FROM logins WHERE login = $1 LIMIT 1", login)
@@ -67,6 +72,7 @@ func AuthenticateUser(ctx context.Context, conn *db.SqlConnection, login, passwo
 	return nil
 }
 
+// GetLoginFromCtx извлекает логин пользователя из gin.Context, если он там есть.
 func GetLoginFromCtx(c *gin.Context) (string, bool) {
 	v, ok := c.Get(string(UserLoginKey))
 	if !ok {

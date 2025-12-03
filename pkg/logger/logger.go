@@ -8,12 +8,10 @@ import (
 	"time"
 )
 
-// Log — активный драйвер логирования, реализующий Interface.
-// Настраивается функцией New и используется всеми вызовами логирования.
+// Log — глобальный активный логгер приложения, реализующий интерфейс Interface.
 var Log Interface
 
-// Interface описывает минимально необходимый набор методов логгера.
-// Конкретная реализация (stdout, файл и т.п.) должна поддерживать эти уровни.
+// Interface описывает минимальный набор методов, поддерживаемых драйвером логгера.
 type Interface interface {
 	Debug(msg *message.LogMessage)
 	Info(msg *message.LogMessage)
@@ -23,29 +21,25 @@ type Interface interface {
 	Panic(msg *message.LogMessage)
 }
 
-// New инициализирует глобальный логгер (Log) с заданным уровнем,
-// а также выставляет Logging — access-логгер запросов.
-// Возвращает активный драйвер логирования.
+// New инициализирует глобальный логгер и access-логгер с заданным уровнем.
 func New(level string) Interface {
 	Log = drivers.MakeStdoutLogger(level)
 	Logging = &Writer{}
 	return Log
 }
 
-// Logging — access-логгер для записи агрегированной информации о HTTP-запросах.
-// Должен быть инициализирован (например, через New) перед использованием.
+// Logging — глобальный access-логгер HTTP-запросов.
 var Logging LogWriter
 
-// LogWriter описывает интерфейс access-логгера, который пишет сводку по запросу/ответу.
+// LogWriter описывает интерфейс для записи сводной информации о HTTP-запросах.
 type LogWriter interface {
 	WriteToLog(timeStart time.Time, originalURL string, requestType string, responseCode int, responseBody string)
 }
 
-// Writer — стандартная реализация access-логгера, использующая глобальный Log.
+// Writer реализует LogWriter и пишет информацию о запросах через глобальный Log.
 type Writer struct{}
 
-// WriteToLog записывает сводку по HTTP-запросу/ответу: длительность, URI, метод,
-// код ответа и краткое описание/тело ответа.
+// WriteToLog формирует и записывает в лог информацию о HTTP-запросе и ответе.
 func (l *Writer) WriteToLog(timeStart time.Time, originalURL string, requestType string,
 	responseCode int, responseBody string) {
 	timeEnd := time.Now()
@@ -63,8 +57,7 @@ func (l *Writer) WriteToLog(timeStart time.Time, originalURL string, requestType
 	})
 }
 
-// RequestLogger — middleware, логирующий каждый HTTP-запрос/ответ с помощью Logging.
-// Он перехватывает статус ответа и передает сводку в WriteToLog.
+// RequestLogger — HTTP-middleware, логирующий каждый запрос и ответ.
 func RequestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		timeStart := time.Now()

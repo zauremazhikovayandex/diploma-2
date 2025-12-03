@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-// PostText POST /api/v1/texts
+// PostText создаёт или обновляет текстовую запись пользователя.
 func (a *API) PostText(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {
@@ -35,7 +35,7 @@ func (a *API) PostText(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetTextHandler GET /api/v1/texts/:id
+// GetTextHandler возвращает одну текстовую запись по её идентификатору.
 func (a *API) GetTextHandler(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {
@@ -70,7 +70,7 @@ func (a *API) GetTextHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetTextsListHandler GET /api/v1/texts
+// GetTextsListHandler возвращает список всех текстовых записей пользователя.
 func (a *API) GetTextsListHandler(c *gin.Context) {
 	login, ok := auth.GetLoginFromCtx(c)
 	if !ok || login == "" {

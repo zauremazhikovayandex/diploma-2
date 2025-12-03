@@ -7,7 +7,7 @@ import (
 	"errors"
 )
 
-// Общие ошибки уровня сервиса, с которыми работают handlers и другие сервисы.
+// Общие ошибки уровня сервиса, которые возвращаются хендлерам и другим сервисам.
 var (
 	ErrUserNotFound       = errors.New("user not found")
 	ErrLoginExists        = errors.New("login already exists")
@@ -19,15 +19,18 @@ var (
 	ErrDecryptionFailed   = errors.New("decryption failed")
 )
 
+// UsersService инкапсулирует операции над пользователями: регистрацию,
+// аутентификацию и получение идентификатора по логину.
 type UsersService struct {
 	db *db.SqlConnection
 }
 
+// NewUsersService создаёт новый сервис пользователей поверх соединения с БД.
 func NewUsersService(dbConn *db.SqlConnection) *UsersService {
 	return &UsersService{db: dbConn}
 }
 
-// Register регистрирует нового пользователя
+// Register регистрирует нового пользователя с указанными логином и паролем.
 func (s *UsersService) Register(ctx context.Context, login, password string) error {
 	err := repositories.CreateUser(ctx, s.db, login, password)
 	if err != nil {
@@ -39,7 +42,7 @@ func (s *UsersService) Register(ctx context.Context, login, password string) err
 	return nil
 }
 
-// Authenticate проверяет логин/пароль
+// Authenticate проверяет логин и пароль пользователя.
 func (s *UsersService) Authenticate(ctx context.Context, login, password string) error {
 	err := repositories.AuthenticateUser(ctx, s.db, login, password)
 	if err != nil {
@@ -51,7 +54,7 @@ func (s *UsersService) Authenticate(ctx context.Context, login, password string)
 	return nil
 }
 
-// GetUserIDByLogin возвращает id пользователя по логину
+// GetUserIDByLogin возвращает идентификатор пользователя по его логину.
 func (s *UsersService) GetUserIDByLogin(ctx context.Context, login string) (int64, error) {
 	id, err := repositories.GetUserIDByLogin(ctx, s.db, login)
 	if err != nil {
